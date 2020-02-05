@@ -7,12 +7,15 @@ Postman uses JavaScript, and it's very handy when you need to pass a variable be
 
 **SIMPLE TESTS TO MAKE SURE THAT EVERYTHING IS OK**
 
+When you want to make sure that you got 200
 ```javascript
 pm.test("Status code is 200", function () {
     pm.response.to.have.status(200);
 });
-
-//shows that there's no error messages in response. Needed when you get 200OK from server AND an error message (yes, this happens)
+```
+This one is useful when you get an error message and you don't care what the status code is.
+```javascript
+//shows that there's no error messages in response.
 console.log("key used: " + data.appkey);
 var jsonBody = JSON.parse(responseBody);
 pm.test("NO ERRORS", function(){
