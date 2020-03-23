@@ -60,6 +60,32 @@ pm.environment.set("sessionToken", postman.getResponseHeader("WWW-Authenticate")
 const jsonBody = pm.response.json();
 const varName = jsonBody.content.find((inf) => inf.name === 'elementName'); // searching for the element's index
 pm.environment.set("envVarName", varName.uid); //variable 'varName' here is the path to the element to be stored. Use the name of the element that you are searching for instead of 'uid'
+
+//or use lodash _.findIndex()
+var users = [
+  { 'user': 'barney',  'active': false },
+  { 'user': 'fred',    'active': false },
+  { 'user': 'pebbles', 'active': true }
+];
+ 
+_.findIndex(users, function(o) { return o.user == 'barney'; });
+// => 0
+ 
+// The `_.matches` iteratee shorthand.
+_.findIndex(users, { 'user': 'fred', 'active': false });
+// => 1
+ 
+// The `_.matchesProperty` iteratee shorthand.
+_.findIndex(users, ['active', false]);
+// => 0
+ 
+// The `_.property` iteratee shorthand.
+_.findIndex(users, 'active');
+// => 2
+
+//find index and use as a part of a locator
+var efs = _.findIndex(jsonBody.content, {"name": "efs.efs"});
+pm.environment.set('testFile', jsonBody.content[efs].uid);
 ```
 **COMPARING THE ACTUAL RESULT IN RESPONSE WITH THE EXPECTED**
 ```javascript
