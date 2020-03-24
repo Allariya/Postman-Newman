@@ -20,7 +20,7 @@ Here you can find descriptions of:
 * [Logs](#logs)
 * [Newman](https://www.npmjs.com/package/newman)
 
-#pre-request-scripts
+# pre-request-scripts
 
 I use them to generate fake data for tests.
 For example, sending random alphanumeric string the the URL parameters.
@@ -44,7 +44,7 @@ var newDirName = _.pad(randomChars, 120, '-_ !#@$%^&*(;:){}[]<>+,.=?/^`|~');
 pm.environment.set("dirName", newDirName);
 ```
 
-There are a lot of built-in modules in postman which can be used for pre-request scripts: [moment.js](#moment.js), [lodash.js](#lodash.js). Here are some simple examples:
+There are a lot of built-in modules in postman which can be used for pre-request scripts: [moment.js](#moment.js), [lodash.js]((https://github.com/Allariya/Postman-Newman/blob/master/Lodash_cheatshit.js)). Here are some simple examples:
 
 ```javascript
 var moment = require('moment');
@@ -72,7 +72,7 @@ pm.globals.set("uniqueAnimals", _.uniq(uniqueAnimals));
 ````
 
 
-#some-test-scripts
+# some-test-scripts
 
 Getting information from a response header (a token, usually):
 
