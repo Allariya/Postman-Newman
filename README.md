@@ -1,131 +1,30 @@
 # Postman-Newman
-Some things I use every day that might be helpful to others
+Some things I use every day that might be helpful to others.
 
-**Postman Test Scripts**
+**Postman Test Automation**
 
-Postman uses JavaScript, and it's very handy when you need to pass a variable between the requests or to see some specila results of the run in the console. That's really vital for Newman.
+Postman contains a runtime based om node.js. 
+Javascript code can be added to execute during  2 events in the flow:
+* before a request (Pre-request Script tab)
+* after a request (Test tab)
 
-**SIMPLE TESTS TO MAKE SURE THAT EVERYTHING IS OK**
+Here you can find descriptions of:
 
-There are a lot snippets in Postman, but sometimes I find this one useful when I get an error message and don't care what the status code is.
-```javascript
-//parsing the response. Parsing all the response data and saving that to a variable: pm.response.json().data;
-var jsonBody = pm.response.json();
+[Pre-request scripts](#pre-request-scripts)
+[Chai assertions](#chai-assertions)
+[moment.js](#moment.js)
+[lodash.js](https://github.com/Allariya/Postman-Newman/blob/master/Lodash_cheatshit.js)
+[Dynamic variables](https://learning.postman.com/docs/postman/variables-and-environments/variables-list/)
+[Other Modules available](https://learning.postman.com/docs/postman/scripts/postman-sandbox-api-reference/)
+[Some Test scripts](#some-test-scripts)
+[Logs](#logs)
+[Newman](https://www.npmjs.com/package/newman)
 
-pm.test("NO ERRORS", () => {
-    pm.expect(jsonBody.messages).to.eql(null);
-    });
-    if (jsonBody.messages !== null) {
-        console.log(jsonBody.message);//Shows an error message (if any) in the console. This may not work for you if the response has a different structure, update the path.
-}
-``` 
-By the way the pm.expect() function takes an additional argument to add custom messages to the assertion:
+#pre-request-scripts
 
-```javascript 
-//Check that the response body is not empty 
-pm.test("The response body is not empty", () => {
-pm.expect(pm.response.json(), "The response body is empty").to.not.be.empty;
-});
-```  
-```javascript 
-//Testing that the response is an object and has the correct keys
-pm.test("The response should be an object", () => {
-    pm.expect(jsonData).to.be.an('object').to.have.keys('results', 'info');
-});
-```
-```javascript 
-//Testing that the objects in the array have the correct keys
-pm.test("The object should have the correct keys", () => {
-    jsonData.results.forEach(result => {
-        pm.expect(result).to.have.keys('name', 'location', 'gender', 'dob', 'phone');
-    });
-});
-```
-If we need to check the same for the object, not for the array, we use _.each (Lodash)
-
-```javascript
-pm.test("contacts have correct keys", () => {
-    _.each(jsonData.Contacts, (contact => {
-        pm.expect(contact).to.have.keys('name', 'jobtitle', 'companyName');
-    }));
-});
-```
-
-**GET THE TOKEN FOR FURTHER REQUESTS (FROM HEADER)**
-```javascript
-//paring a response header with a token and passing it to an environmental variable
-pm.environment.set("sessionToken", postman.getResponseHeader("WWW-Authenticate"))
-``` 
- **SEARCHING FOR A SPECIAL ELEMENT IN AN ARRAY TO STORE IT IN A VARIABLE**
-```javascript
-const jsonBody = pm.response.json();
-const varName = jsonBody.content.find((inf) => inf.name === 'elementName'); // searching for the element's index
-pm.environment.set("envVarName", varName.uid); //variable 'varName' here is the path to the element to be stored. Use the name of the element that you are searching for instead of 'uid'
-
-//or use lodash _.findIndex()
-var users = [
-  { 'user': 'barney',  'active': false },
-  { 'user': 'fred',    'active': false },
-  { 'user': 'pebbles', 'active': true }
-];
- 
-_.findIndex(users, function(o) { return o.user == 'barney'; });
-// => 0
- 
-// The `_.matches` iteratee shorthand.
-_.findIndex(users, { 'user': 'fred', 'active': false });
-// => 1
- 
-// The `_.matchesProperty` iteratee shorthand.
-_.findIndex(users, ['active', false]);
-// => 0
- 
-// The `_.property` iteratee shorthand.
-_.findIndex(users, 'active');
-// => 2
-
-//find index and use as a part of a locator
-var efs = _.findIndex(jsonBody.content, {"name": "efs.efs"});
-pm.environment.set('testFile', jsonBody.content[efs].uid);
-```
-**COMPARING THE ACTUAL RESULT IN RESPONSE WITH THE EXPECTED**
-```javascript
-const jsonBody = pm.response.json();
-pm.test("MESSAGE THAT WILL BE SHOWN IN THE CONSOLE", function(){
-    const expectedResult = pm.environment.get('expectedVar'); 
-    //Variable 'expectedVar' should be stored beforehand manually or from one other request.
-    pm.expect(jsonBody.yourPath).to.eql(expectedVar);//you can also use .to.not.eql(), .to.include(), .to.not.include() and many others that Postman provides.
-});
-```
-```javascript 
-const jsonData = pm.response.json();
-//Taking data from one part of the response and using it to assert against another value
-pm.test("The email address should contain correct name", () => {
-    jsonData.results.forEach(result => {
-//set the values of the first and the last names as local variables 
-        let firstName = result.name.first;
-        let lastName = result.name.last;
-//Check that the email address contains the full name
-//Using .replace() to remove the whitespace in the name
-        pm.expect(result.email).to.equal(`${firstName.replace(" ", "")}.${lastName.replace(" ", "")}@domain.com);
-});
-});
-```
-```javascript
-// Using oneOf to show that an assertion can be one of many things
-pm.test("The gender value should be `male` or `female`", () => {
-    jsonData.results.forEach(result => {
-        pm.expect(result.gender).to.be.oneOf(['male', 'female']);
-    });
-});
-```
-```javascript
- // Check that the date format is correct using .match()
-        pm.expect(result.dob.date).to.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
-```
-
-**PRE-REQUEST SCRIPTS**
 I use them to generate fake data for tests.
+For example, sending random alphanumeric string the the URL parameters.
+
 ```javascript
 function myFunction(length) {
    var result           = '';
@@ -139,13 +38,13 @@ function myFunction(length) {
  }
 console.log('TEST NAME GENERATED: ' + myFunction(120));
 
-//almost the same but with Lodash
+//does almost the same but with Lodash:
 var randomChars = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-var newDirName = _.pad(randomChars, 87, '-_ !@#$%^&*(){}[]<>');
+var newDirName = _.pad(randomChars, 120, '-_ !#@$%^&*(;:){}[]<>+,.=?/^`|~');
 pm.environment.set("dirName", newDirName);
 ```
-There are a lot of built-in modules in postman which can be used for pre-request scripts.
-Just use require() 
+
+There are a lot of built-in modules in postman which can be used for pre-request scripts: [moment.js](#moment.js), [lodash.js](#lodash.js). Here are some simple examples:
 
 ```javascript
 var moment = require('moment');
@@ -172,8 +71,122 @@ let uniqueAnimals = ["Dog", "Cat", "Dog", "Cow", "Dog", "Lion", "Dog", "Horse"];
 pm.globals.set("uniqueAnimals", _.uniq(uniqueAnimals));
 ````
 
-**LOGS**
+
+#some-test-scripts
+
+Getting information from a response header (a token, usually):
+
+```javascript
+//getting a token and passing it to an environmental variable
+pm.environment.set("sessionToken", postman.getResponseHeader("WWW-Authenticate"))
+
+//or
+pm.environment.set("sessionToken", pm.response.headers.get("WWW-Authenticate"));
+
+Parsing the response:
+
+```javascript
+var jsonBody = pm.response.json();
+
+//to check that there were no error messages, and displaying the error message if there's any. (pm.expect - underlying this is the ChaiJS expect BDD library).
+pm.test("NO ERRORS", () => {
+    pm.expect(jsonBody.messages).to.eql(null);
+    });
+    if (jsonBody.messages !== null) {
+        console.log(jsonBody.message);
+}
+``` 
+pm.expect() takes an additional argument to add custom messages to the assertion:
+
+```javascript 
+//Check that the response body is not empty 
+pm.test("The response body is not empty", () => {
+pm.expect(pm.response.json(), "The response body is empty").to.not.be.empty;
+});
+```  
+
+.to.have.keys():
+
+```javascript 
+//Testing that the response is an object and has the correct keys
+pm.test("The response should be an object", () => {
+    pm.expect(jsonData).to.be.an('object').to.have.keys('results', 'info');
+});
+
+//Testing that the objects in the array have the correct keys
+pm.test("The object should have the correct keys", () => {
+    jsonData.results.forEach(result => {
+        pm.expect(result).to.have.keys('name', 'location', 'gender', 'dob', 'phone');
+    });
+});
+
+//If we need to check the same for the object, not for the array, we use _.each (Lodash)
+pm.test("contacts have correct keys", () => {
+    _.each(jsonData.Contacts, (contact => {
+        pm.expect(contact).to.have.keys('name', 'jobtitle', 'companyName');
+    }));
+});
+```
+
+Searching for an element in an array:
+
+```javascript
+//response:
+{
+"users": [
+{'user': 'barney', 'active': false, 'id': 1},
+{ 'user': 'fred',    'active': false, , 'id': 2},
+{ 'user': 'pebbles', 'active': true, , 'id': 3}
+],
+}
+//let's say we need to find a user barney and save his id to a variable.
+
+var jsonBody = pm.response.json();//parsing response
+//js find():
+const userIndex = jsonBody.users.find((inf) => inf.user === 'barney'); // searching for the element's index
+pm.environment.set('userID', userIndex.id);
+
+//lodash _.findIndex():
+var userIndex = _.findIndex(jsonBody.users, {"user": "barney"});
+pm.environment.set('userID', jsonBody.users[userIndex].id);
+```
+
+Taking data from one part of the response and using it to assert against another value using pm.expect:
+
+```javascript
+pm.test("MESSAGE THAT WILL BE SHOWN IN THE CONSOLE", function(){
+    const expectedResult = pm.environment.get('expectedVar'); 
+    //Variable 'expectedVar' should be stored beforehand manually or from one other request.
+    pm.expect(jsonBody.<yourPath>).to.eql(expectedVar);//you can also use .to.not.eql(), .to.include(), .to.not.include() and many others that Postman provides.
+});
+
+//forEach(), replace()
+const jsonData = pm.response.json();
+pm.test("The email address should contain correct name", () => {
+    jsonData.results.forEach(result => {
+//set the values of the first and the last names as local variables 
+        let firstName = result.name.first;
+        let lastName = result.name.last;
+//Check that the email address contains the full name
+//Using .replace() to remove the whitespace in the name
+        pm.expect(result.email).to.equal(`${firstName.replace(" ", "")}.${lastName.replace(" ", "")}@domain.com);
+});
+});
+
+// Using oneOf() to show that an assertion can be one of many things
+pm.test("The gender value should be `male` or `female`", () => {
+    jsonData.results.forEach(result => {
+        pm.expect(result.gender).to.be.oneOf(['male', 'female']);
+    });
+});
+
+// Check that the date format is correct using .match()
+        pm.expect(result.dob.date).to.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
+```
+#logs
+
 Useful pre-request scripts for logs:
+
 ```javascript
 // Indentify where the the log statement has been run
 console.log(`${pm.info.eventName} - This is executed in the Pre-Request Script before the request is sent`);
@@ -181,7 +194,9 @@ console.log(`${pm.info.eventName} - This is executed in the Pre-Request Script b
 // Logging out the name of the request being run
 console.log(`Request Name: ${pm.info.requestName}`);
 ```
+
 Scripts that make Logs more convenient to use:
+
 ```javascript
 // Logging details of the request out to the console
 console.log(`${pm.info.eventName} - This is executed in the Tests Script after the request is sent`);
@@ -208,4 +223,3 @@ pm.test("All the properties have the correct data type", () => {
 // Logging out the cookie information
 console.log(pm.cookies);
 ```
-
