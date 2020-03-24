@@ -11,6 +11,7 @@ There are a lot snippets in Postman, but sometimes I find this one useful when I
 ```javascript
 //parsing the response. Parsing all the response data and saving that to a variable: pm.response.json().data;
 var jsonBody = pm.response.json();
+
 pm.test("NO ERRORS", () => {
     pm.expect(jsonBody.messages).to.eql(null);
     });
@@ -137,6 +138,11 @@ function myFunction(length) {
    return result;
  }
 console.log('TEST NAME GENERATED: ' + myFunction(120));
+
+//almost the same but with Lodash
+var randomChars = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+var newDirName = _.pad(randomChars, 87, '-_ !@#$%^&*(){}[]<>');
+pm.environment.set("dirName", newDirName);
 ```
 There are a lot of built-in modules in postman which can be used for pre-request scripts.
 Just use require() 
