@@ -183,7 +183,7 @@ pm.test("The gender value should be `male` or `female`", () => {
 // Check that the date format is correct using .match()
         pm.expect(result.dob.date).to.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
 ```
-#logs
+# logs
 
 Useful pre-request scripts for logs:
 
