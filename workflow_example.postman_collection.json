@@ -1,0 +1,456 @@
+{
+	"info": {
+		"_postman_id": "342f6bf3-e9a3-40fa-8654-05a3f95a36c4",
+		"name": "workflow_example",
+		"description": "<a href=\"https://docs.google.com/drawings/d/11GIo2IAQmictmFJuxIJ3sj1zi_nFSDlm_uJMLa9I3WE/pub?w=1410&amp;h=772\" target=\"_blank\"><img src=\"https://docs.google.com/drawings/d/11GIo2IAQmictmFJuxIJ3sj1zi_nFSDlm_uJMLa9I3WE/pub?w=1410&amp;h=772\"></a>\n\nThe Spotify playlist generator collection lets you get your daily/weekly dose of fresh music. Modeled on the AMAZING [Spotify Discover Weekly](https://www.spotify.com/discoverweekly/), within 5 minutes you'll be able to set this up, and even tweak it to your heart's content!\n\n### Workflow\n\n<a href=\"https://docs.google.com/drawings/d/1p7imXUIWIC9t5vX4B5jD2XuY6MoYOYcT9I9gJVi87ic/pub?w=1532&amp;h=241\" target=\"_blank\">\n<img src=\"https://docs.google.com/drawings/d/1p7imXUIWIC9t5vX4B5jD2XuY6MoYOYcT9I9gJVi87ic/pub?w=1532&amp;h=241\"></a>\n\n1. Take a list of artists as input\n2. Randomly select an artist from this list and usse Spotify's fantastic [Get Related Artists](https://developer.spotify.com/web-api/console/get-artist-related-artists/) and [Get an Artist's top tracks](https://developer.spotify.com/web-api/console/get-artist-top-tracks/) APIs to mashup a playlist\n3. Add these related artists back to the original list and persist back to the environment\n\n### Setup the Environment\n\nClick on the Run in Postman button above to import the collection and environment template within your app.\n\n1. ##### Spotify\n    * Head to [Spotify Developer](https://developer.spotify.com) and register, then create a new app in the My Applications section. Add the `client_id` and `client_secret` to your environment.\n    * Under the newly created app config, add the following Redirect URI - `https://www.getpostman.com/oauth2/callback`\n    * We'll use the [Authorization Code Flow](https://developer.spotify.com/web-api/authorization-guide/#authorization-code-flow) to obtain the Refresh Token.\n    * Open Postman, under a new request, click on the Authorization tab, select OAuth 2.0 and fill in these values:\n    - Token Name: can be anything\n      - Auth URL: https://accounts.spotify.com/authorize\n      - Access Token URL: https://accounts.spotify.com/api/token\n      - Client ID: {{client_id}}\n      - Client Secret: {{client_secret}}\n      - [Scope](https://developer.spotify.com/web-api/authorization-guide/#scopes): `playlist-read-private playlist-modify-private`\n      - Grant Type: Authorization Code\n      - Request access token locally: Checked\n  * Click on Request Token, go through the OAuth flow, and add the `refresh_token` to your environment\n\n2. ##### Collection Config\n  Set the following variables in your environment\n  * `user_id`: your spotify username\n  * `country_code`:  in [ISO 3166-1](http://en.wikipedia.org/wiki/ISO3166-1alpha-2) format\n  * `N`: defaults to 5. Refer to the algorithm section for more details\n  * `artists`: List of seed artists for the collection. You can find them as part of the Spotify artist link (Available in the app): e.g. for Oasis, the link looks something like https://open.spotify.com/artist/2DaxqgrOhkeH0fpeiQq2f4, choose the last section. The artists variable is an array of strings, so it'll look something like: [\"2DaxqgrOhkeH0fpeiQq2f4\", \"2ooIqOf4X2uz4mMptXCtie\"]\n\n### Run the Collection\n\n1. To verify that everything works as expected, run the collection in the Postman app using the [Collection Runner](https://www.getpostman.com/docs/running_collections)\n2. The same collection executes in [Newman](https://github.com/postmanlabs/newman) as well. Just export the Collection and Environment files and execute the following command\n\n```\nnewman -c SpotifyPLGen.json.postman_collection -e SpotifyPlGen.json.postman_environment\n```\n",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get Auth Key",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var client_credentials = (environment.client_id + ':' + environment.client_secret).encodeBase64();",
+							"postman.setEnvironmentVariable(\"client_credentials\", client_credentials);",
+							"",
+							"environment.cloned_environment && (delete environment.cloned_environment);",
+							"var environmentObjClone = _.cloneDeep(environment);",
+							"postman.setEnvironmentVariable(\"cloned_environment\", JSON.stringify(environmentObjClone));"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = (responseCode.code === 200);",
+							"",
+							"if (responseCode.code === 200) {",
+							"    try {",
+							"        var authorization = JSON.parse(responseBody).access_token,",
+							"            refresh_token = JSON.parse(responseBody).refresh_token;",
+							"        postman.setEnvironmentVariable(\"authorization\", authorization);",
+							"        refresh_token && postman.setEnvironmentVariable(\"refresh_token\", refresh_token);",
+							"        postman.setNextRequest(\"Get Artist\");",
+							"        console.log(\"Authorization retrieved. Moving to Get Artist.\");",
+							"    }",
+							"    catch (e) {",
+							"        console.log(e);",
+							"        throw false;",
+							"    }",
+							"}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic {{client_credentials}}"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "grant_type",
+							"value": "refresh_token",
+							"type": "text"
+						},
+						{
+							"key": "refresh_token",
+							"value": "{{refresh_token}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://accounts.spotify.com/api/token",
+					"protocol": "https",
+					"host": [
+						"accounts",
+						"spotify",
+						"com"
+					],
+					"path": [
+						"api",
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Artist",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"try {",
+							"    var artist_id = _.sample(JSON.parse(environment.artists));",
+							"    postman.setEnvironmentVariable(\"id\", artist_id);",
+							"}",
+							"catch (e) {",
+							"    console.log(e);",
+							"    throw false;",
+							"}",
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = (responseCode.code === 200);",
+							"",
+							"if (responseCode.code === 200) {",
+							"    var artist = JSON.parse(responseBody);",
+							"  // Store the artist name in the environment",
+							"    postman.setEnvironmentVariable(\"artist_name\", artist.name);",
+							"  // Store the artist id in an artists array",
+							"    // postman.setEnvironmentVariable(\"artists\", JSON.stringify([environment.id]));",
+							"    // As defined in the workflow, set the next request to be executed to Get Related Artists",
+							"    postman.setNextRequest(\"Get Related Artists\");",
+							"    console.log(\"Information retrieved for artist: \" + environment.artist_name);",
+							"}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authorization}}"
+					}
+				],
+				"url": {
+					"raw": "https://api.spotify.com/v1/artists/{{id}}",
+					"protocol": "https",
+					"host": [
+						"api",
+						"spotify",
+						"com"
+					],
+					"path": [
+						"v1",
+						"artists",
+						"{{id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Related Artists",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = (responseCode.code === 200);",
+							"",
+							"if (responseCode.code === 200) {",
+							"    try {",
+							"        var N = _.parseInt(environment.N),",
+							"            relatedArtists = _(JSON.parse(responseBody).artists).sample(N).pluck('id').value(),",
+							"            artists = JSON.parse(environment.artists);",
+							"    ",
+							"        !environment.done_artists && postman.setEnvironmentVariable(\"done_artists\", JSON.stringify([]));",
+							"        artists = _.difference(_.union(artists, relatedArtists), JSON.parse(environment.done_artists));",
+							"        postman.setEnvironmentVariable(\"current_artists\", JSON.stringify(_.union(relatedArtists, [environment.id])));",
+							"        postman.setEnvironmentVariable(\"artists\", JSON.stringify(artists));",
+							"        postman.setNextRequest(\"Create a Playlist\");",
+							"        console.log(\"Related artists retrieved for: \" + environment.artist_name);",
+							"    }",
+							"    catch (e) {",
+							"        console.log(e);",
+							"        throw false;",
+							"    }",
+							"}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authorization}}"
+					}
+				],
+				"url": {
+					"raw": "https://api.spotify.com/v1/artists/{{id}}/related-artists",
+					"protocol": "https",
+					"host": [
+						"api",
+						"spotify",
+						"com"
+					],
+					"path": [
+						"v1",
+						"artists",
+						"{{id}}",
+						"related-artists"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create a Playlist",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 201\"] = (responseCode.code === 201);",
+							"",
+							"if (responseCode.code === 201) {",
+							"    var playlist = JSON.parse(responseBody);",
+							"    ",
+							"    // Store the playlist id in the environment to add tracks in the future",
+							"    postman.setEnvironmentVariable(\"playlist_id\", playlist.id);",
+							"    postman.setNextRequest(\"Get Artist Top Tracks\");",
+							"    console.log(\"Created playlist: \" + environment.artist_name + \" Mix\");",
+							"}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authorization}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"{{artist_name}} Mix\",\n  \"public\": false\n}"
+				},
+				"url": {
+					"raw": "https://api.spotify.com/v1/users/{{user_id}}/playlists",
+					"protocol": "https",
+					"host": [
+						"api",
+						"spotify",
+						"com"
+					],
+					"path": [
+						"v1",
+						"users",
+						"{{user_id}}",
+						"playlists"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Artist Top Tracks",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"// Counter for the loop",
+							"var c = environment.c ? _.parseInt(environment.c) : 0;",
+							"var artists = JSON.parse(environment.current_artists);",
+							"",
+							"// This value will be use in the URL",
+							"postman.setEnvironmentVariable(\"artist_id\", artists[c]);"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 200\"] = (responseCode.code === 200);",
+							"",
+							"if (responseCode.code === 200) {",
+							"    var N = _.parseInt(environment.N),",
+							"        tracks = _(JSON.parse(responseBody).tracks).sample(N).pluck('id').value();",
+							"    ",
+							"    // Store the track ids in the Environment, to be used in the next request",
+							"    postman.setEnvironmentVariable(\"tracks\", JSON.stringify(tracks));",
+							"    postman.setNextRequest(\"Add Tracks to Playlist\");",
+							"    console.log(\"Related artists retrieved for: \" + environment.artist_name);",
+							"}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authorization}}"
+					}
+				],
+				"url": {
+					"raw": "https://api.spotify.com/v1/artists/{{artist_id}}/top-tracks?country={{country_code}}",
+					"protocol": "https",
+					"host": [
+						"api",
+						"spotify",
+						"com"
+					],
+					"path": [
+						"v1",
+						"artists",
+						"{{artist_id}}",
+						"top-tracks"
+					],
+					"query": [
+						{
+							"key": "country",
+							"value": "{{country_code}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add Tracks to Playlist",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var tracks = JSON.parse(environment.tracks);",
+							"// As required by Spotify API",
+							"var uris = _.map(tracks, function (track) {",
+							"        return \"spotify:track:\" + track;",
+							"    }).join(\",\");",
+							"",
+							"postman.setEnvironmentVariable(\"uris\", uris);"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"tests[\"Status code is 201\"] = (responseCode.code === 201);",
+							"",
+							"if (responseCode.code === 201) {",
+							"    var N = _.parseInt(environment.N);",
+							"    // Increment artist counter by 1",
+							"    var c = environment.c && (_.parseInt(environment.c) + 1) || 1;",
+							"    ",
+							"    // If end of the loop, don’t setNextRequest",
+							"    if (c === N + 1) {",
+							"        postman.setEnvironmentVariable(\"c\", 0);",
+							"        console.log(\"And we're done!\");",
+							"        if (environment.done_artists) {",
+							"            postman.setEnvironmentVariable(\"done_artists\", JSON.stringify(_.union(JSON.parse(environment.done_artists), [environment.id])));",
+							"        }",
+							"        else {",
+							"            postman.setEnvironmentVariable(\"done_artists\", JSON.stringify([environment.id]));",
+							"        }",
+							"        postman.setEnvironmentVariable(\"artists\", JSON.stringify(_.pull(JSON.parse(environment.artists), environment.id)));",
+							"    }",
+							"    // otherwise loop back to the previous request, to retrieve data for the next artist",
+							"    else {",
+							"        postman.setEnvironmentVariable(\"c\", c);",
+							"        postman.setNextRequest(\"Get Artist Top Tracks\");",
+							"        console.log(\"Moving to next artist's tracks\");",
+							"    }",
+							"}"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{authorization}}"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "https://api.spotify.com/v1/users/{{user_id}}/playlists/{{playlist_id}}/tracks?uris={{uris}}",
+					"protocol": "https",
+					"host": [
+						"api",
+						"spotify",
+						"com"
+					],
+					"path": [
+						"v1",
+						"users",
+						"{{user_id}}",
+						"playlists",
+						"{{playlist_id}}",
+						"tracks"
+					],
+					"query": [
+						{
+							"key": "uris",
+							"value": "{{uris}}"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
