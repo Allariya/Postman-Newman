@@ -11,7 +11,7 @@ Javascript code can be added to execute during  2 events in the flow:
 Here you can find descriptions of:
 
 * [Pre-request scripts](#pre-request-scripts)
-* [Chai assertions cheat sheet](#chai-assertions)
+* [Chai assertions lib](https://www.chaijs.com/api/bdd/)
 * [moment.js  cheat sheet](#moment.js)
 * [lodash.js cheat sheet](https://github.com/Allariya/Postman-Newman/blob/master/Lodash_cheatshit.js)
 * [Dynamic variables](https://learning.postman.com/docs/postman/variables-and-environments/variables-list/)
