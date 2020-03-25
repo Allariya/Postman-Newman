@@ -19,6 +19,7 @@ Here you can find descriptions of:
 * [Some Test scripts](#some-test-scripts)
 * [Logs](#logs)
 * [Newman](https://www.npmjs.com/package/newman)
+* [Workflow example using setNextRequest()](https://github.com/Allariya/Postman-Newman/blob/master/workflow_example.postman_collection.json)
 
 # pre-request-scripts
 
