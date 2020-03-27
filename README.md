@@ -14,6 +14,7 @@ Here you can find descriptions of:
 * [Chai assertions lib](https://www.chaijs.com/api/bdd/)
 * [moment.js  cheat sheet](#moment.js)
 * [lodash.js cheat sheet](https://github.com/Allariya/Postman-Newman/blob/master/Lodash_cheatshit.js)
+* [Cheerio](https://github.com/cheeriojs/cheerio/blob/master/Readme.md)
 * [Dynamic variables](https://learning.postman.com/docs/postman/variables-and-environments/variables-list/)
 * [Other Modules available](https://learning.postman.com/docs/postman/scripts/postman-sandbox-api-reference/)
 * [Some Test scripts](#some-test-scripts)
@@ -150,6 +151,18 @@ pm.environment.set('userID', userIndex.id);
 //lodash _.findIndex():
 var userIndex = _.findIndex(jsonBody.users, {"user": "barney"});
 pm.environment.set('userID', jsonBody.users[userIndex].id);
+
+```
+Searching for data in HTML response using Cheerio:
+
+```javascript
+const $ = cheerio.load(pm.response.text())
+
+pm.test("it should return a title", () => { 
+    pm.expect($('title').text()).to.not.be.empty 
+})
+
+pm.environment.set('title', $('title').text())
 ```
 
 Taking data from one part of the response and using it to assert against another value using pm.expect:
