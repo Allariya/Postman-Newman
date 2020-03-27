@@ -163,6 +163,16 @@ pm.test("it should return a title", () => {
 })
 
 pm.environment.set('title', $('title').text())
+
+
+const $ = cheerio.load(pm.response.text());
+var summary = pm.environment.get('summary');//If an environment variable is called inside the function, postman runner doesn't execute pm.invironment.get, so call it outside and use a local variable.
+pm.test("Rendered HTML is correct", () => { 
+    pm.expect($('h1').text()).to.eql(summary);
+});
+
+
+
 ```
 
 Taking data from one part of the response and using it to assert against another value using pm.expect:
