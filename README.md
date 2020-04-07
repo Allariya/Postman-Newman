@@ -85,7 +85,13 @@ pm.environment.set("sessionToken", postman.getResponseHeader("WWW-Authenticate")
 //or
 pm.environment.set("sessionToken", pm.response.headers.get("WWW-Authenticate"));
 
-Parsing the response:
+//parsing the request
+//this works for form-data:
+var reqBody = request.data;
+//this works for raw:
+var reqBody = JSON.parse(request.data);
+
+//Parsing the response:
 
 ```javascript
 var jsonBody = pm.response.json();
