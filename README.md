@@ -71,6 +71,9 @@ pm.globals.set("todaysFavoriteColour", _.first(_.shuffle(favoriteColours)));
 let uniqueAnimals = ["Dog", "Cat", "Dog", "Cow", "Dog", "Lion", "Dog", "Horse"];
 
 pm.globals.set("uniqueAnimals", _.uniq(uniqueAnimals));
+
+//using random dynamic variables in pre-request scripts
+pm.variables.replaceIn('{{$randomFirstName}}')
 ````
 
 
