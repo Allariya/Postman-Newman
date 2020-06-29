@@ -228,6 +228,38 @@ const isLocal = pm.environment.get('environment') == 'local'
 
 ```
 
+Looping:
+```javascript
+//Getting array length and adding more items until there's enough data for testing (for sorting, filtering)
+
+//Send GET request first, in tests:
+const jsonBody = pm.response.json().content;
+var whenEnough = (jsonBody.length < {{int}}) ? postman.setNextRequest(`{{POST request name}}`) : postman.setNextRequest(null);
+
+//Send POST request to generate data, in tests:
+postman.setNextRequest(`{{GET request name}}`)
+
+
+
+//Cleaning up, removing the test data from the array
+
+//send get the array request, in tests:
+var jsonBody = pm.response.json().content;
+
+if (jsonBody === undefined || jsonBody.length == 0) {
+    console.log(`No fake items left, cleaning is over`);
+    postman.setNextRequest(null);
+}
+
+else {
+    pm.environment.set(`idToDelete`, jsonBody[0].id);
+}
+
+//DEL request goes next and has this in tests tab:
+postman.setNextRequest(`{{GET request name}}`)
+
+```
+
 # logs
 
 Useful pre-request scripts for logs:
