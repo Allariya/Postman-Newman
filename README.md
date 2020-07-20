@@ -300,3 +300,13 @@ pm.test("All the properties have the correct data type", () => {
 // Logging out the cookie information
 console.log(pm.cookies);
 ```
+
+Schema validation 
+
+
+// Load the JSON Schema
+const customerSchema = JSON.parse(environment.customerSchema);
+
+// Test whether the response matches the schema
+var customer = JSON.parse(responseBody);
+tests["Customer is valid"] = tv4.validate(customer, customerSchema);
