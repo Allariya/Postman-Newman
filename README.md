@@ -137,6 +137,14 @@ pm.test("contacts have correct keys", () => {
         pm.expect(contact).to.have.keys('name', 'jobtitle', 'companyName');
     }));
 });
+
+//for arrays
+const jsonBody = pm.response.json().content;
+pm.test(`${pm.info.requestName}: ` +  `Content is not empty.`, () => {
+    Array.prototype.forEach.call(jsonBody, result => {
+        pm.expect(result).to.be.an.array.and.to.be.not.empty;
+    });
+});
 ```
 
 Searching for an element in an array:
