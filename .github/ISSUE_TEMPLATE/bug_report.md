@@ -18,7 +18,8 @@ A clear and concise description of what the bug is.
 :three:  
 
 **Expected Behavior**  
-A clear and concise description of what you expected to happen.
+A clear and concise description of what you expected to happen.  
+A link to requirements/a screenshot from the requirements if applicable.  
 
 **Actual Behavior**  
 Describe what happened, provide errors/exceptions.
